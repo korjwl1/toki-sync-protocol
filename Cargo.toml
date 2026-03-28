@@ -1,0 +1,12 @@
+[package]
+name = "toki-sync-protocol"
+version = "0.1.0"
+edition = "2021"
+description = "Shared binary protocol types for toki sync (client + server)"
+license = "FSL-1.1-Apache-2.0"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+bincode = "1"
