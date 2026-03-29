@@ -101,8 +101,9 @@ pub struct LastTsPayload {
     pub ts_ms: i64,
 }
 
-/// A stored event in the TSDB (events keyspace).
+/// A stored event in the sync wire protocol.
 /// Uses dictionary-compressed IDs for repeated strings.
+/// Token values are variable-length — column names are in SyncBatchPayload::token_columns.
 ///
 /// **Field order matters for bincode compatibility.**
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -111,10 +112,7 @@ pub struct StoredEvent {
     pub session_id: u32,
     pub source_file_id: u32,
     pub project_name_id: u32,
-    pub input_tokens: u64,
-    pub output_tokens: u64,
-    pub cache_creation_input_tokens: u64,
-    pub cache_read_input_tokens: u64,
+    pub tokens: Vec<u64>,
 }
 
 /// A single event item in a sync batch.
@@ -130,6 +128,8 @@ pub struct SyncBatchPayload {
     /// Dictionary snapshot: all dict IDs referenced by items in this batch.
     pub dict: HashMap<u32, String>,
     pub provider: String,
+    /// Column names for the `StoredEvent::tokens` Vec (e.g. ["input", "output", "cache_create", "cache_read"]).
+    pub token_columns: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -163,10 +163,7 @@ mod tests {
             session_id: 2,
             source_file_id: 3,
             project_name_id: 4,
-            input_tokens: 100,
-            output_tokens: 200,
-            cache_creation_input_tokens: 300,
-            cache_read_input_tokens: 400,
+            tokens: vec![100, 200, 300, 400],
         };
         let bytes = bincode::serialize(&event).unwrap();
         let decoded: StoredEvent = bincode::deserialize(&bytes).unwrap();
@@ -174,9 +171,6 @@ mod tests {
         assert_eq!(decoded.session_id, 2);
         assert_eq!(decoded.source_file_id, 3);
         assert_eq!(decoded.project_name_id, 4);
-        assert_eq!(decoded.input_tokens, 100);
-        assert_eq!(decoded.output_tokens, 200);
-        assert_eq!(decoded.cache_creation_input_tokens, 300);
-        assert_eq!(decoded.cache_read_input_tokens, 400);
+        assert_eq!(decoded.tokens, vec![100, 200, 300, 400]);
     }
 }
