@@ -119,7 +119,13 @@ pub struct StoredEvent {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SyncItem {
     pub ts_ms: i64,
+    /// Unique message ID for VM dedup (same ts + same labels → one data point without this).
+    #[serde(default)]
+    pub message_id: String,
     pub event: StoredEvent,
+    /// Pre-calculated usage total (Claude: all 4 token types, Codex: input+output only).
+    #[serde(default)]
+    pub usage_total: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
