@@ -106,7 +106,7 @@ pub struct LastTsPayload {
 /// Token values are variable-length — column names are in SyncBatchPayload::token_columns.
 ///
 /// **Field order matters for bincode compatibility.**
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct StoredEvent {
     pub model_id: u32,
     pub session_id: u32,
@@ -116,7 +116,7 @@ pub struct StoredEvent {
 }
 
 /// A single event item in a sync batch.
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub struct SyncItem {
     pub ts_ms: i64,
     /// Unique message ID for VM dedup (same ts + same labels → one data point without this).
@@ -126,6 +126,11 @@ pub struct SyncItem {
     /// Pre-calculated usage total (Claude: all 4 token types, Codex: input+output only).
     #[serde(default)]
     pub usage_total: u64,
+    /// True if this item corrects a previously synced event (same msg_id, updated values).
+    /// Server writes token values at ts_ms (VM overwrites same series+timestamp) but
+    /// does NOT increment events_total (it's not a new event).
+    #[serde(default)]
+    pub is_correction: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
