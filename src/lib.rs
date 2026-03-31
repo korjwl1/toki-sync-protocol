@@ -23,7 +23,7 @@ pub const PROTOCOL_VERSION: u16 = 1;
 pub const MAX_PAYLOAD_SIZE: u32 = 16 * 1024 * 1024;
 
 /// Schema version the server expects. Clients must match.
-pub const SCHEMA_VERSION: u32 = 2;
+pub const SCHEMA_VERSION: u32 = 3;
 
 // ─── Message types ──────────────────────────────────────────────────────────
 
