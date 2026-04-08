@@ -184,4 +184,77 @@ mod tests {
         assert_eq!(decoded.project_name_id, 4);
         assert_eq!(decoded.tokens, vec![100, 200, 300, 400]);
     }
+
+    #[test]
+    fn sync_item_field_order_stable() {
+        let item = SyncItem {
+            ts_ms: 1700000000000,
+            message_id: "msg-abc".to_string(),
+            event: StoredEvent {
+                model_id: 5,
+                session_id: 6,
+                source_file_id: 7,
+                project_name_id: 8,
+                tokens: vec![50, 60],
+            },
+            usage_total: 110,
+            is_correction: true,
+        };
+        let bytes = bincode::serialize(&item).unwrap();
+        let decoded: SyncItem = bincode::deserialize(&bytes).unwrap();
+        assert_eq!(decoded.ts_ms, 1700000000000);
+        assert_eq!(decoded.message_id, "msg-abc");
+        assert_eq!(decoded.event.model_id, 5);
+        assert_eq!(decoded.event.tokens, vec![50, 60]);
+        assert_eq!(decoded.usage_total, 110);
+        assert!(decoded.is_correction);
+    }
+
+    #[test]
+    fn sync_batch_payload_field_order_stable() {
+        let batch = SyncBatchPayload {
+            items: vec![SyncItem {
+                ts_ms: 1000,
+                message_id: "m1".to_string(),
+                event: StoredEvent::default(),
+                usage_total: 42,
+                is_correction: false,
+            }],
+            dict: {
+                let mut d = std::collections::HashMap::new();
+                d.insert(1, "claude-opus-4".to_string());
+                d
+            },
+            provider: "claude_code".to_string(),
+            token_columns: vec!["input".to_string(), "output".to_string()],
+        };
+        let bytes = bincode::serialize(&batch).unwrap();
+        let decoded: SyncBatchPayload = bincode::deserialize(&bytes).unwrap();
+        assert_eq!(decoded.items.len(), 1);
+        assert_eq!(decoded.items[0].ts_ms, 1000);
+        assert_eq!(decoded.items[0].usage_total, 42);
+        assert_eq!(decoded.dict[&1], "claude-opus-4");
+        assert_eq!(decoded.provider, "claude_code");
+        assert_eq!(decoded.token_columns, vec!["input", "output"]);
+    }
+
+    #[test]
+    fn auth_payload_field_order_stable() {
+        let auth = AuthPayload {
+            jwt: "token123".to_string(),
+            device_name: "macbook".to_string(),
+            schema_version: SCHEMA_VERSION,
+            provider: "claude_code".to_string(),
+            device_key: "uuid-1234".to_string(),
+            protocol_version: PROTOCOL_VERSION,
+        };
+        let bytes = bincode::serialize(&auth).unwrap();
+        let decoded: AuthPayload = bincode::deserialize(&bytes).unwrap();
+        assert_eq!(decoded.jwt, "token123");
+        assert_eq!(decoded.device_name, "macbook");
+        assert_eq!(decoded.schema_version, SCHEMA_VERSION);
+        assert_eq!(decoded.provider, "claude_code");
+        assert_eq!(decoded.device_key, "uuid-1234");
+        assert_eq!(decoded.protocol_version, PROTOCOL_VERSION);
+    }
 }
